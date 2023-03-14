@@ -1,2 +1,6 @@
-*
-!.gitignore
+.idea/
+**/__pycache__
+**/.~lock.*
+results/*
+data/data_sampling
+data/*.bin
