@@ -5,15 +5,14 @@ import pandas as pd
 import ray
 import datetime
 
-from typing import List
+from typing import List, Collection, Union
+from numbers import Number
+from pathlib import Path
 from scipy.optimize import minimize
 from scipy.stats import loguniform
 
-from scripts.optimization.simulate import Simulator
-from scripts import RESULT_PATH
+from src.optimization.simulate import Simulator
 
-from typing import Collection, Union
-from numbers import Number
 
 class Parameter:
     """ Class to store parameters, their bounds and initial values for fitting
@@ -347,7 +346,9 @@ class OptimizationProblem:
 
     def __save_optimization_results(self, optimization_results, savepath):
         if savepath is None:
+            RESULT_PATH = Path(__file__).parent.parent.parent / 'results'
             savepath = RESULT_PATH / f"parameter_optimization_{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}.tsv"
+            print(f"No savepath for optimization results provided. Results will be stored under: {savepath}")
 
         df_dicti = {
             'success': [],
