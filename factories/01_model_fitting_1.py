@@ -1,25 +1,59 @@
 """
-Fits the model to each state. As referenced data it uses the given dataset.
-Parameters are stored in a .tsv file. Parameter names are enumerated, corresponding to the simulation they're used in .
-E.g. f_art0 -> f_art before PrEP; f_art1 -> f_art after PrEP; f_art2 -> f_art after 1st lockdown
+Before sampling datasets and fitting the model to the samples, some datafiles have to be created. This includes:
+    1. Continuous trajectory of the prescription data
+    2. Parameter file of the model fitted against datapoints from 1.
+This script creates these two files, by first creating the continuous trajectory of the provided prescription data, and
+then fitting the model against the data.
+
+The two files will be stored under:
+    path_to_PrEP_Prescrpition/data/prescriptions_daily.tsv  (data file)
+    path_to_PrEP_Prescription/results/model_parameters.tsv  (parameter file)
 """
 
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-
-from scipy.signal import lfilter
+import datetime as dt
+import xarray as xr
 
 from src.models.models import Model, model_extended
+from src.sampling.sampling import fill_array
 from src.optimization.simulate import Simulator
 from src.optimization.optimize import Parameter, OptimizationProblem
-from src import DATA_PATH, RESULT_PATH, state_to_int, int_to_state
+from src import DATA_PATH, RESULT_PATH, state_to_int, int_to_state, states_to_remove
+
+def data_creation():
+    df = pd.read_csv(DATA_PATH / 'prescription_data.tsv', sep='\t')
+
+    dimensions = ['state', 'year', 'month', 'day']
+    state_coords = []
+    year_coords = np.arange(2015, 2022)
+    month_coords = np.arange(1, 13)
+    day_coords = np.arange(1, 32)
+    arrays = []
+    for state_int in pd.unique(df['state']):
+        if state_int in states_to_remove:
+            continue
+        state_coords.append(state_int)
+        state = int_to_state[state_int]
+        df_state = df[df['state'] == state_int]
+        state_array = fill_array(df_state, start=(2015, 1, 1), end=(2021, 12, 31))
+        arrays.append(state_array)
+
+    # Build dataframe
+    da = xr.DataArray(data=arrays, dims=dimensions, coords=[state_coords, year_coords, month_coords, day_coords])
+    df_daily = da.to_dataframe(name='values')
+    df_daily.reset_index(inplace=True)
+    df_daily.dropna(inplace=True, axis=0)
+    df_daily['date'] = df_daily.apply(lambda x: dt.date(int(x['year']), int(x['month']), int(x['day'])), axis=1)
+    df_daily = pd.pivot(df_daily, index=['date', 'year', 'month', 'day'], columns='state', values='values')
+    df_daily.reset_index(inplace=True)
+    df_daily.to_csv(DATA_PATH / 'prescriptions_daily.tsv', sep='\t')
 
 
 def optimize_states(ref_data, state, fix_k, stop_indices, optimization_kwargs, initial_guesses=None):
 
     # get msm population size in state
-    msm_df = pd.read_csv(DATA_PATH / 'msm_population.tsv', sep='\t')
+    msm_df = pd.read_csv(DATA_PATH / 'population_at_risk.tsv', sep='\t')
     n_msm = msm_df[msm_df['state'] == state]['total'].values[0]
 
     # get initial guesses for initial values y0_art and y0_prep
@@ -127,11 +161,16 @@ def optimize_model(model, data, state, p_beforePrep, p_afterPrep, stop_indices, 
     p_fixed = p_fixed1 + p_free1 + p_fixed2     # all parameter values in sim_0 (before PrEP) are already fitted and therefore fixed
     p_free = p_free2
 
+    # create directory to save optimization results
+    date_today = dt.datetime.today().strftime('%Y-%m-%d')
+    savepath = RESULT_PATH / 'optimization_results' / date_today
+    savepath.mkdir(parents=True, exist_ok=True)
+
     # optimize model parameters
     opt = OptimizationProblem('optimization', sim, p_free, p_fixed, data)
     opt.optimize(t_end=stop_indices, t_step=1, smooth=False, daily=True, continuous=True,
                  sample_parameters=['k_prep'], sample_times=sample_times, n_threads=10,
-                 save_results=True, savepath=RESULT_PATH / "optimization_results_20230222" / "optimization" / f"optimization_{state}.tsv",
+                 save_results=True, savepath=savepath / f"optimization_{state}.tsv",
                  **optimization_kwargs)
 
     # add optimized parameters to results_dicti
@@ -147,10 +186,12 @@ def optimize_model(model, data, state, p_beforePrep, p_afterPrep, stop_indices, 
 
 def main():
 
+    data_creation()
+
     # set hyperparameters for optimization
     optimization_kwargs = {
         'method': 'Nelder-Mead',
-        'options': {'maxiter': 1000}
+        'options': {'maxiter': 2000}
     }
 
     # settings (fix k_prep, stop dates, start year)
@@ -208,7 +249,7 @@ def main():
                 df_dicti[f"{pid}{i}"].append(value)
 
     parameter_df = pd.DataFrame(df_dicti)
-    savepath = RESULT_PATH / "model_parameters" / "model_parameters_rawdata_20230222.tsv"
+    savepath = RESULT_PATH / "model_parameters" / "model_parameters.tsv"
     parameter_df.to_csv(savepath, sep='\t', index=False)
 
 

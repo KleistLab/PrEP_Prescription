@@ -7,6 +7,8 @@ PROJECT_PATH = ROOT_PATH.parent
 DATA_PATH = PROJECT_PATH / 'data'
 RESULT_PATH = PROJECT_PATH / 'results'
 
+states_to_remove = [3, 4, 10, 17, 18]   # Berlin, Brandenburg, Nordrhein, Westfalen-Lippe, unidentified
+
 state_to_int = {
     "None": 0,
     "Baden-Württemberg": 1,

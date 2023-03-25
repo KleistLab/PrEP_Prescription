@@ -16,7 +16,7 @@ from scipy.stats import binom
 from numba import jit
 
 from src import int_to_state, state_to_int, DATA_PATH
-from src import timeit
+from src import timeit, states_to_remove
 
 
 def sample_dataset(df, df_ART, da_path, da_filename, times=1, n_nodes=5):
@@ -58,7 +58,6 @@ def sample_dataset(df, df_ART, da_path, da_filename, times=1, n_nodes=5):
     df = df[['state', 'year', 'month', '30', '90']]
 
     # remove some states (e.g. Berlin, Brandenburg, unidentified, ...) and change state_names from int to string
-    states_to_remove = [3, 4, 10, 17, 18]
     df.drop(df[df['state'].isin(states_to_remove)].index, axis=0, inplace=True)
     df['state'] = df.apply(lambda x: int_to_state[int(x['state'])], axis=1)
     df.sort_values(['state', 'year', 'month'], inplace=True)
@@ -170,16 +169,22 @@ def create_datearray(shape, start_date, end_date=None):
         year += 1
     return date_array
 
-def fill_array(df_state, date_to_idx, idx_to_date):
+def fill_array(df_state, start, end):
     """ From the monthly prescriptions, daily prescriptions are computed by incorporating information about the package size:
          - Create an array containing zeros, where each entry corresponds to a day between 2018-01-01 and 2022-12-31
          - For each month check number of prescribed TDF/FTC packages and their size
          - For each prescription of size n draw a random day in the month, assuming the prescription was redeemed that day.
          - Starting from that day, increment the next n entries by 1
     """
-    state_array = create_datearray((6, 12, 31),
-                                   start_date=dt.date(2017, 1, 1),
-                                   end_date=dt.date(2021, 12, 31))
+    start_year, start_month, start_day = start
+    end_year, end_month, end_day = end
+    start_date = dt.date(start_year, start_month, start_day)
+    end_date = dt.date(end_year, end_month, end_day)
+    date_to_idx = {date: k for k, date in enumerate(np.arange(start_date, end_date + dt.timedelta(days=2)).astype(dt.date))}
+    idx_to_date = {value: key for key, value in date_to_idx.items()}
+    state_array = create_datearray((end_year - start_year + 1, 12, 31),
+                                   start_date=start_date,
+                                   end_date=end_date)
     n_dates = len(date_to_idx)
     counts = np.zeros(n_dates)
     for _, row in df_state.iterrows():
@@ -187,21 +192,22 @@ def fill_array(df_state, date_to_idx, idx_to_date):
         month = row.month
         pkg_size = row.SE
         prescriptions = int(row['Verordnungen'])
-        start_dates = randomdates(year, month, prescriptions)
-        for date in start_dates:
-            end_date = date + dt.timedelta(days=pkg_size)
-            i_start, i_end = date_to_idx[date], date_to_idx[end_date]
+        start_dates_prescriptions = randomdates(year, month, prescriptions)
+        for date in start_dates_prescriptions:
+            end_date_prescription = date + dt.timedelta(days=int(pkg_size))
+            if end_date_prescription > end_date:
+                end_date_prescription = end_date + dt.timedelta(days=1)
+            i_start, i_end = date_to_idx[date], date_to_idx[end_date_prescription]
             counts[i_start:i_end] += 1
 
     for k, count in enumerate(counts):
         date = idx_to_date[k]
-        if date.year == 2022:
+        if date.year > end_year:
             break
-        i = date.year - 2017
+        i = date.year - start_year
         j = date.month - 1
         k = date.day - 1
         state_array[i, j, k] += count
-    state_array = state_array[:-1]
 
     return state_array
 
