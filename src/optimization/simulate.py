@@ -2,7 +2,7 @@ import numpy as np
 from typing import List, Union
 from scipy.integrate import solve_ivp
 from scipy.signal import lfilter
-from scripts.models.models import Model
+from src.models.models import Model
 import copy
 
 class SimResults:
