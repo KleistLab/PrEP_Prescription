@@ -1,6 +1,6 @@
 .idea/
 **/__pycache__
 **/.~lock.*
-results/*
+results/optimization_results/*
 data/data_sampling
-data/*.bin
+**/*.bin

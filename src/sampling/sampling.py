@@ -19,7 +19,7 @@ from src import int_to_state, state_to_int, DATA_PATH
 from src import timeit, states_to_remove
 
 
-def sample_dataset(df, df_ART, da_path, da_filename, times=1, n_nodes=5):
+def sample_dataset(df, df_ART, start, end, da_path, da_filename, times=100, n_nodes=5):
     """ Samples numbers of 30- and 90-pill prescriptions from binomial distribution and creates daily dataset from that.
     The function consists of three steps:
       1) Compute probabilities of 30- and 90-pill prescriptions for each month from provided dataset
@@ -32,6 +32,8 @@ def sample_dataset(df, df_ART, da_path, da_filename, times=1, n_nodes=5):
 
     :param df: Dataframe containing number of 30- and 90-pill prescriptions
     :param df_ART: Dataframe containing the number of TDF/FTC prescriptions/users for HIV Therapy
+    :param start: Earliest date to be sampled. Tuple of the form (YYYY, m, d)
+    :param end: Latest date to be sampled. Tuple of the form (YYYY, m, d)
     :param da_path: Folder in which temporary data-arrays will be stored. Data arrays will be merged in the end
     :param times: Number of samples to create
     :param n_nodes:
@@ -40,7 +42,7 @@ def sample_dataset(df, df_ART, da_path, da_filename, times=1, n_nodes=5):
 
     # compute number of people in need of TDF/FTC per month
     # We assume the number of people in need of TDF/FTC = number_in_need_of_PrEP + number_of_TDF/FTC_users_for_ART
-    df_msm = pd.read_csv(DATA_PATH / 'msm_population.tsv', sep='\t')
+    df_msm = pd.read_csv(DATA_PATH / 'population_at_risk.tsv', sep='\t')
     df_ART['total_pop'] = df_ART.apply(lambda x: x['y_art'] + df_msm[df_msm['state'] == x['state']]['total'].values[0], axis=1)
     df_ART.sort_values(by=['state', 'year', 'month'], inplace=True)
     df_ART.reset_index(inplace=True)
@@ -109,8 +111,8 @@ def sample_dataset(df, df_ART, da_path, da_filename, times=1, n_nodes=5):
                        dims=['sample', 'pkg_size', 'state', 'year', 'month'])
 
     # create daily dataset
-    date_to_idx = {date: k for k, date in enumerate(np.arange(dt.date(2017, 1, 1), dt.date(2022, 12, 31)).astype(dt.date))}
-    idx_to_date = {value: key for key, value in date_to_idx.items()}
+    # date_to_idx = {date: k for k, date in enumerate(np.arange(dt.date(2017, 1, 1), dt.date(2022, 12, 31)).astype(dt.date))}
+    # idx_to_date = {value: key for key, value in date_to_idx.items()}
     arrays = []
     for state in state_coords:
         print(f'--- Processing {state}')
@@ -121,7 +123,7 @@ def sample_dataset(df, df_ART, da_path, da_filename, times=1, n_nodes=5):
             sample_df = sample_ar.to_dataframe(name=1).reset_index()
             sample_df.replace({'p30': 30, 'p90': 90}, inplace=True)
             sample_df.rename({'pkg_size': 'SE', 1: 'Verordnungen'}, inplace=True, axis=1)
-            out.append(fill_array_remote.remote(sample_df, date_to_idx, idx_to_date))
+            out.append(fill_array_remote.remote(sample_df, (2017, 1, 1), (2021, 12, 31)))
         state_array = ray.get(out)
         ray.shutdown()
         da_state = xr.DataArray([state_array],
@@ -212,8 +214,8 @@ def fill_array(df_state, start, end):
     return state_array
 
 @ray.remote
-def fill_array_remote(df_state, date_to_idx, idx_to_date):
-    return fill_array(df_state, date_to_idx, idx_to_date)
+def fill_array_remote(df_state, start, end):
+    return fill_array(df_state, start, end)
 
 def randomdates(year, month, size):
     """ Creates an array of random dates in a given month """

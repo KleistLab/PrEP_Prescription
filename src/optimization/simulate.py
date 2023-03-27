@@ -73,11 +73,13 @@ class Simulator:
         """ Simulates the models by calling __integrate()
         The function can run multiple subsequent simulations with different parameters
         Simulations are run in the intervals (0, t_ends[0]), (t_ends[0]+t_step, t_ends[1]), ...
+        Unlike simulate(), simulate_continuous() does not use different initial values for each simulation. Instead, the
+        function uses the last y-value from the previous simulation as initial value.
 
         :param endpoints: Endpoint of each simulation
         :param t_step: Steps size for function evaluation
         :param parameters: parameter sets for each simulation
-        :param y0: initial values for each simulation
+        :param y0: initial values for first simulation
         :param smooth: Set to True if the simulation should be smoothed (by moving average)
         :param kwargs:
         :return:

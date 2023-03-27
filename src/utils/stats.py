@@ -50,7 +50,7 @@ def compute_milestones(sim_xr: xr.DataArray, dicti_in_need, coeff_intermitted, c
     """
 
     # get number of people at risk for each state
-    df_msm = pd.read_csv(DATA_PATH / 'msm_population.tsv', sep='\t')
+    df_msm = pd.read_csv(DATA_PATH / 'population_at_risk.tsv', sep='\t')
     df_msm.sort_values(by='state', inplace=True)
 
     # compute prep users from prescriptions

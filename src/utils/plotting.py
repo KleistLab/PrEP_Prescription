@@ -79,7 +79,7 @@ def plot_state_simulations_sampled(sim_xr:xr.DataArray, start_date, end_date, df
     i_end = len(date_range_sim)
 
     states = list(sim_xr.coords['state'].to_series())
-    fig, axes = plt.subplots(nrows=4, ncols=4, figsize=(16, 10.6    ))
+    fig, axes = plt.subplots(nrows=4, ncols=4, figsize=(16, 10.6))
     for i, row in enumerate(axes):
         for j, ax in enumerate(row):
             k = 4*i + j
