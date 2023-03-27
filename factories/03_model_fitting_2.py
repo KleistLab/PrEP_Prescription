@@ -39,7 +39,7 @@ def optimize_states(ref_data, state, fix_k, stop_indices, savepath, initial_gues
 
     # create dictionary containing initial guesses
     if initial_guesses is None:
-        sample_times = 10
+        sample_times = 50
         initial_guesses = {
             0: {'f_art': y0_art1, 'f_prep': 0, 'k_art': -1e-2, 'k_prep': 0, 'n_msm': n_msm},
             1: {'f_art': 1, 'f_prep': 0, 'k_art': 1, 'k_prep': 1e-4, 'n_msm': n_msm},
