@@ -9,7 +9,7 @@ The two files will be stored under:
     path_to_PrEP_Prescrpition/data/prescriptions_daily.tsv  (data file)
     path_to_PrEP_Prescription/results/model_parameters.tsv  (parameter file)
 """
-
+import calendar
 import pandas as pd
 import numpy as np
 import datetime as dt
@@ -21,8 +21,18 @@ from src.optimization.simulate import Simulator
 from src.optimization.optimize import Parameter, OptimizationProblem
 from src import DATA_PATH, RESULT_PATH, state_to_int, int_to_state, states_to_remove
 
+use_parameters = False  # Set to True to use the generated parameter file for subsequent steps
+                        # Note: The file will be stored under data/model_parameters.tsv and replace any previously generated file at that path!
+n_p_init = 1000         # number of initial parameter guesses during optimization
+
 def data_creation():
     df = pd.read_csv(DATA_PATH / 'prescription_data.tsv', sep='\t')
+
+    start_year, start_month, start_day = min(df.apply(lambda x: dt.date(x['year'], x['month'], 1), axis=1)).timetuple()[:3]
+    end_year, end_month = max(df.apply(lambda x: dt.date(x['year'], x['month'], 1), axis=1)).timetuple()[:2]
+    end_day = calendar.monthrange(end_year, end_month)[1]
+    start = (start_year, start_month, start_day)
+    end = (end_year, end_month, end_day)
 
     dimensions = ['state', 'year', 'month', 'day']
     state_coords = []
@@ -36,7 +46,7 @@ def data_creation():
         state_coords.append(state_int)
         state = int_to_state[state_int]
         df_state = df[df['state'] == state_int]
-        state_array = fill_array(df_state, start=(2015, 1, 1), end=(2021, 12, 31))
+        state_array = fill_array(df_state, start=start, end=end)
         arrays.append(state_array)
 
     # Build dataframe
@@ -50,7 +60,7 @@ def data_creation():
     df_daily.to_csv(DATA_PATH / 'prescriptions_daily.tsv', sep='\t')
 
 
-def optimize_states(ref_data, state, fix_k, stop_indices, optimization_kwargs, initial_guesses=None):
+def optimize_states(ref_data, state, fix_k, stop_indices, savepath, optimization_kwargs, initial_guesses=None):
 
     # get msm population size in state
     msm_df = pd.read_csv(DATA_PATH / 'population_at_risk.tsv', sep='\t')
@@ -60,7 +70,7 @@ def optimize_states(ref_data, state, fix_k, stop_indices, optimization_kwargs, i
     y0_art1 = ref_data[0]
 
     if initial_guesses is None:
-        sample_times = 100
+        sample_times = n_p_init
         initial_guesses = {
             0: {'f_art': y0_art1, 'f_prep': 0, 'k_art': -1e-2, 'k_prep': 0, 'n_msm': n_msm},
             1: {'f_art': 1, 'f_prep': 0, 'k_art': 1, 'k_prep': 1e-4, 'n_msm': n_msm},
@@ -111,13 +121,13 @@ def optimize_states(ref_data, state, fix_k, stop_indices, optimization_kwargs, i
 
     p_dicti, optimization_problem = optimize_model(
         model=model, data=ref_data, state=state, p_beforePrep=p_beforePrep, p_afterPrep=p_afterPrep,
-        stop_indices=stop_indices, sample_times=sample_times, **optimization_kwargs
+        stop_indices=stop_indices, sample_times=sample_times, savepath=savepath, **optimization_kwargs
     )
 
     return p_dicti, optimization_problem
 
 
-def optimize_model(model, data, state, p_beforePrep, p_afterPrep, stop_indices, sample_times=20, **optimization_kwargs):
+def optimize_model(model, data, state, p_beforePrep, p_afterPrep, stop_indices, savepath, sample_times=20, **optimization_kwargs):
     """ Function to optimize unknowns for PrEP prediction
     This function is tailored specifically towards the PrEP dataset
     It first finds y0 and k_art for the y_ART function, by fitting the function against the first datapoints before Sep. 2019.
@@ -161,11 +171,6 @@ def optimize_model(model, data, state, p_beforePrep, p_afterPrep, stop_indices, 
     p_fixed = p_fixed1 + p_free1 + p_fixed2     # all parameter values in sim_0 (before PrEP) are already fitted and therefore fixed
     p_free = p_free2
 
-    # create directory to save optimization results
-    date_today = dt.datetime.today().strftime('%Y-%m-%d')
-    savepath = RESULT_PATH / 'optimization_results' / date_today
-    savepath.mkdir(parents=True, exist_ok=True)
-
     # optimize model parameters
     opt = OptimizationProblem('optimization', sim, p_free, p_fixed, data)
     opt.optimize(t_end=stop_indices, t_step=1, smooth=False, daily=True, continuous=True,
@@ -188,6 +193,11 @@ def main():
 
     data_creation()
 
+    # create directory to save optimization results
+    date_today = dt.datetime.now().strftime('%Y-%m-%d %H:%M')
+    savepath = RESULT_PATH / 'optimization_results' / date_today
+    savepath.mkdir(parents=True, exist_ok=True)
+
     # set hyperparameters for optimization
     optimization_kwargs = {
         'method': 'Nelder-Mead',
@@ -196,7 +206,7 @@ def main():
 
     # settings (fix k_prep, stop dates, start year)
     # NOTE: The sim_idx attribute in the parameter objects in optimize_states() have to be adjusted according to chosen stop_dates
-    fix_k = False
+    fix_k = False  # Set to True to use the same k_preps before lockdown
     start_year = 2017
     stop_dates = [
         '2019-08-31',       # start of insurance coverage
@@ -224,7 +234,8 @@ def main():
         ref_data = prescription_df[state_int].to_numpy()
         ref_data = ref_data
         p_dicti, opt_problem = optimize_states(ref_data=ref_data, state=state, fix_k=fix_k,
-                                               stop_indices=stop_indices, optimization_kwargs=optimization_kwargs)
+                                               stop_indices=stop_indices, savepath=savepath,
+                                               optimization_kwargs=optimization_kwargs)
         parameter_dicti[state] = p_dicti
         sim_results = opt_problem.simulate(smooth=False)
         sim_dicti[state] = {'y': sim_results.y, 't': sim_results.t}
@@ -251,6 +262,9 @@ def main():
     parameter_df = pd.DataFrame(df_dicti)
     savepath = RESULT_PATH / "model_parameters" / "model_parameters.tsv"
     parameter_df.to_csv(savepath, sep='\t', index=False)
+
+    if use_parameters:
+        parameter_df.to_csv(DATA_PATH / 'model_parameters.tsv', sep='\t', index=False)
 
 
 if __name__ == '__main__':
