@@ -2,6 +2,7 @@
 **/__pycache__
 **/.~lock.*
 prep_prescription.egg-info
+examples/.ipynb_checkpoints
 
 results/optimization_results/*
 data/data_sampling
