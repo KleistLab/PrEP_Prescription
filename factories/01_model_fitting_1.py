@@ -244,7 +244,7 @@ def main():
     sim_t_step = opt_problem.t_step
 
     # create dictionary with keys - <pid_simid> and values - list
-    df_dicti = {'state': [], 'sim_endpoints': [], 'sim_t_step': [],}
+    df_dicti = {'state': [], 'sim_endpoints': [], 'sim_t_step': []}
     unknowns = sorted([p.pid for p in opt_problem.free_parameters] + [p.pid for p in opt_problem.fixed_parameters])
     for unknown in unknowns:
         for i in range(opt_problem.n_sim):

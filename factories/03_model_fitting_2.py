@@ -24,9 +24,9 @@ pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
 
-use_parameters = False  # Set to True to use the generated parameter file for subsequent steps
-                        # Note: The file will be stored under data/model_parameters_sampled.tsv and replace any
-                        #       previously generated file at that path!
+save_in_data_folder = False     # Set to True to use the generated parameter file for subsequent steps
+                                # Note: The file will be stored under data/model_parameters_sampled.tsv and replace any
+                                #       previously generated file at that path!
 
 def optimize_states(ref_data, state, fix_k, stop_indices, savepath, initial_guesses=None, optimization_kwargs={}):
 
@@ -281,7 +281,7 @@ def main():
     savepath = RESULT_PATH / "model_parameters" / "model_parameters_sampled.tsv"
     parameter_df.to_csv(savepath, sep='\t', index=False)
 
-    if use_parameters:
+    if save_in_data_folder:
         parameter_df.to_csv(DATA_PATH / 'model_parameters_sampled.tsv', sep='\t', index=False)
 
 

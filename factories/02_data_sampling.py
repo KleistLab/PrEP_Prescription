@@ -30,8 +30,8 @@ pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
 
 
-use_dataset = False     # set to True to use the generated dataset for subsequent steps.
-                        # NOTE: This will save the dataset under data/prescriptions_daily_sampled.bin and replace previously generated files!
+save_in_data_folder = False     # set to True to use the generated dataset for subsequent steps.
+                                # NOTE: This will save the dataset under data/prescriptions_daily_sampled.bin and replace previously generated files!
 n_samples = 100         # number of samples
 start = (2017, 1, 1)    # earliest date to sample
 n_nodes = 10            # number of nodes/threads to use
@@ -95,7 +95,7 @@ def main():
                          df_ART=df_sim, times=n_samples, n_nodes=n_nodes)
     pickle.dump(xar, (DA_PATH / da_filename).open('wb'))
 
-    if use_dataset:
+    if save_in_data_folder:
         pickle.dump(xar, (DATA_PATH / da_filename).open('wb'))
 
 
