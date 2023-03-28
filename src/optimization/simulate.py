@@ -3,7 +3,6 @@ from typing import List, Union
 from scipy.integrate import solve_ivp
 from scipy.signal import lfilter
 from src.models.models import Model
-import copy
 
 class SimResults:
     def __init__(self, t, y):

@@ -1,5 +1,3 @@
-import copy
-import gc
 import pickle
 
 import numpy as np
@@ -8,15 +6,12 @@ import xarray as xr
 
 import calendar
 import datetime as dt
-from datetime import datetime
 import ray
-import time
 
 from scipy.stats import binom
-from numba import jit
 
-from src import int_to_state, state_to_int, DATA_PATH
-from src import timeit, states_to_remove
+from src import int_to_state, DATA_PATH
+from src import states_to_remove
 
 
 def sample_dataset(df, df_ART, start, end, da_path, da_filename, times=100, n_nodes=5):
@@ -65,7 +60,7 @@ def sample_dataset(df, df_ART, start, end, da_path, da_filename, times=100, n_no
     df.sort_values(['state', 'year', 'month'], inplace=True)
     df.reset_index(inplace=True)
 
-    # add column containing number of msm per state
+    # add column containing number of TDF/FTC users per state
     df['total_population'] = df_ART['total_pop']
 
     # create coordinates for xarrays
