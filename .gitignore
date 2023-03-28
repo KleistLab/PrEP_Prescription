@@ -1,6 +1,8 @@
 .idea/
 **/__pycache__
 **/.~lock.*
+prep_prescription.egg-info
+
 results/optimization_results/*
 data/data_sampling
 **/*.bin
