@@ -75,7 +75,8 @@ In this step, the model is fitted against each sampled dataset, resulting in a p
 success and runtime of model optimization highly depends on the initial parameter guesses, the model fitting of each 
 federal state consists of two steps:
 1. The median of all samples from a federal state is computed. The model is then fitted against this median dataset, using
-100 sets of initial parameter guesses, sampled from a log-uniform distribution. 
+100 sets of initial parameter guesses, sampled from a log-uniform distribution.\
+(Results of this first optimization step are stored under `/results/optimization_results/<current_date>/optimization_<federal state>.tsv`) 
 2. Using the best optimal parameter set from the previous step as initial guess, the model is then fitted against each data sample. 
 
 This not only ensures success for most datasets, but also speeds up the model optimization process.\
