@@ -64,8 +64,6 @@ for i_state, state in enumerate(states):
     df_parameters_state = parameter_df_sampled[parameter_df_sampled['state'] == state]
     state_array = np.zeros(shape=(len(sample_coords), len(y_coords), sim_end+1))
     for i_smp, (_, row) in enumerate(df_parameters_state.iterrows()):
-        # if i_smp > 5:
-        #     break
         if row['success']:
             endpoints = copy.deepcopy(row['sim_endpoints'])
             i_end = endpoints[-1]
