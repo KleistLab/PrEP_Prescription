@@ -38,6 +38,10 @@ Install `PrEP_Prescription` in the newly created virtual environment.
 (prep_prescrption) pip install -e . 
 ```
 
+### Download file
+Download `prescriptions_daily_sampled.bin` from [Nextcloud](https://fs.bmi.app.bmi.dphoenixsuite.de/s/tNLy567ERptYjR3?dir=undefined&openfile=29953) 
+and copy into the data folder.
+
 ## 2 Reproduce Results
 Under `<path_to_PrEP_Prescriptions>/factories/` there are four scripts that can be used to reproduce the results. As all
 intermediate results are stored in the data folder, each script can be run individually. The scripts cover the four main
