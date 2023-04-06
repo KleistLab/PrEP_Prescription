@@ -46,7 +46,7 @@ fitting to the sampled data, and (iv) final evaluation of the results, including
 
 ### Preliminary Steps
 Script:
-```/factories/00_preliminary_data_creation.py```\
+```/factories/01_preliminary_data_creation.py```
 
 In this step, continuous trajectories are created from the provided prescription data and the model is fitted onto them.
 This is necessary because the data sampling step relies on the number of TDF/FTC prescriptions for HIV therapy.\
@@ -54,11 +54,11 @@ The transformed prescription data are stored under `/data/prescriptions_daily.ts
 under `/data/model_parameters.tsv`.
 
 ### Data Sampling
-Script: ```/factories/01_data_sampling.py```\
+Script: ```/factories/02_data_sampling.py```
 
 This script samples datasets from a binomial distribution using information from the prescription dataset and the model 
 created in the previous step. The distributions from which the datasets are sampled are described in the Methods section.
-Datasets are then stored as an `xarray.Dataarray` object with dimensions 'state', 'sample', 'year', 'month', 'day'.\
+Datasets are then stored as an `xarray.Dataarray` object with dimensions 'state', 'sample', 'year', 'month' and 'day'.\
 *Note: Since numpy arrays require each inner array to have the same shape, the arrays corresponding to the 'day' dimension
 are always of size 31. Entries corresponding to non-existing dates (e.g. Feb. 31st) are encoded as `NaN`.*\
 
@@ -69,7 +69,8 @@ folder. Alternatively, `save_in_data_folder = True` can be set before running th
 file automatically into the data folder, but also overwrites the previous file.
 
 ### Model Fitting
-Script: ```02_model_fitting.py```\
+Script: ```/factories/03_model_fitting.py```
+
 In this step, the model is fitted against each sampled dataset, resulting in a parameter set for each sample. Since the
 success and runtime of model optimization highly depends on the initial parameter guesses, the model fitting of each 
 federal state consists of two steps:
@@ -85,6 +86,8 @@ code. This will save the generated file automatically into the data folder, but 
 
 *** TOADD: REMOVE THE FIRST 90 DAYS FROM DATASETS WHEN FITTING MODEL AGAINST IT ***
 ### Evaluation of Results
+Script: `/factories/04_evaluation.py`
+
 Finally, the generated models are then evaluated. This script creates several figures, as well as some stats:
 * Plots the sampled datasets
 * Plots TDF/FTC prescription numbers for PrEP and ART, as predicted by the models
