@@ -23,7 +23,7 @@ from src import DATA_PATH, RESULT_PATH, state_to_int, int_to_state, states_to_re
 
 use_parameters = False  # Set to True to use the generated parameter file for subsequent steps
                         # Note: The file will be stored under data/model_parameters.tsv and replace any previously generated file at that path!
-n_p_init = 1000         # number of initial parameter guesses during optimization
+n_p_init = 50          # number of initial parameter guesses during optimization
 
 def data_creation():
     df = pd.read_csv(DATA_PATH / 'prescription_data.tsv', sep='\t')

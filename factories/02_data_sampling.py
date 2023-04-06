@@ -32,7 +32,7 @@ pd.set_option('display.max_columns', None)
 
 save_in_data_folder = False     # set to True to use the generated dataset for subsequent steps.
                                 # NOTE: This will save the dataset under data/prescriptions_daily_sampled.bin and replace previously generated files!
-n_samples = 100         # number of samples
+n_samples = 1000         # number of samples
 start = (2017, 1, 1)    # earliest date to sample
 n_nodes = 10            # number of nodes/threads to use
 
