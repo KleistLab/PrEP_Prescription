@@ -16,8 +16,9 @@ The following files can be found there:
 * `model_parameters.tsv`: Parameters of the model fitted against the data in `prescriptions_daily.tsv`, starting Jan. 1st 2017.
 * `model_parameters_sampled.tsv`: Parameters of the models fitted against the sampled data, starting Apr. 1st 2017.
 
-The sampled datasets (`prescriptions_daily_sampled.bin`) is too large to upload to github. However, it can be created by 
-executing `/factories/01_data_sampling.py`. It is also possible to download it from [Nextcloud](https://fs.bmi.app.bmi.dphoenixsuite.de/s/tNLy567ERptYjR3?dir=undefined&openfile=29953).
+The sampled datasets (`prescriptions_daily_sampled.bin`) is too large to upload to github. However, it can be downloaded 
+from [Nextcloud](https://fs.bmi.app.bmi.dphoenixsuite.de/s/tNLy567ERptYjR3?dir=undefined&openfile=29953) or created by 
+executing `/factories/01_data_sampling.py`.
 
 ## 1 Installation
 ### Clone Repository
@@ -53,7 +54,7 @@ Script:
 ```/factories/01_preliminary_data_creation.py```
 
 In this step, continuous trajectories are created from the provided prescription data and the model is fitted onto them.
-This is necessary because the data sampling step relies on the number of TDF/FTC prescriptions for HIV therapy.\
+This is necessary because the data sampling step relies on the estimated number of TDF/FTC prescriptions for HIV therapy.\
 The transformed prescription data are stored under `/data/prescriptions_daily.tsv` and the parameters of the fitted model 
 under `/data/model_parameters.tsv`.
 
@@ -83,7 +84,7 @@ federal state consists of two steps:
 (Results of this first optimization step are stored under `/results/optimization_results/<current_date>/optimization_<federal state>.tsv`) 
 2. Using the best optimal parameter set from the previous step as initial guess, the model is then fitted against each data sample. 
 
-This not only ensures success for most datasets, but also speeds up the model optimization process.\
+This not only ensures success for most datasets, but also speeds up the model optimization process.
 
 The model parameters will be stored under `/results/model_parameters_sampled.tsv`. To use these parameters for the final
 analysis, copy the file into the data folder. Alternatively, `save_in_data_folder = True` can be set before running the 
@@ -114,11 +115,11 @@ Truvada was taken daily for treatment or PrEP.
 The model used in this project consists of two equations Y<sub>ART</sub> and Y<sub>PrEP</sub> that model the prescription 
 numbers for HIV therapy and PrEP, respectively.
 ```math 
-\frac{dY_{ART}(t)}{dt} = k_{ART}y_{ART}(t)
-\frac{dY_{PrEP}(t)}{dt} = k_{PrEP}(t)(N_{inNeed} - (c_{on-demand}\cdot c_{SHI}\cdot Y_{PrEP}(t)y_{ART})
-\frac{dY_{tot}(t)}{dt} = y_{ART}(t) + Y_{PrEP}(t)
+\frac{dY_{ART}(t)}{dt} = k_{ART}\cdot Y_{ART}(t)\\
+\frac{dY_{PrEP}(t)}{dt} = k_{PrEP}(t)(N_{inNeed} - (c_{on-demand}\cdot c_{SHI}\cdot Y_{PrEP}(t))\\
+\frac{dY_{tot}(t)}{dt} = Y_{ART}(t) + Y_{PrEP}(t)
 ```
-with initial values $Y_{ART}(t_0) = Y_{ART,0}  and Y_{PrEP}(t_0) = Y_{PrEP,0}. For $Y_{ART}$, we assume an exponential decay, 
+with initial values $Y_{ART}(t_0) = Y_{ART,0}$  and $Y_{PrEP}(t_0) = Y_{PrEP,0}$. For $Y_{ART}$, we assume an exponential decay, 
 reflecting the slow decline of TDF/FTC use in HIV therapy. In the case of PrEP prescriptions, $Y_{PrEP}$, we assume that
 they tend to increase over time and may eventually saturate when the number of people in need of PrEP ($N_{inNeed}$) is 
 reached.
@@ -137,7 +138,7 @@ We assumed that PrEP uptake, reflected by parameter k_{PrEP}(t), changes between
 To obtain the model parameters and initial values, the model is fitted to the number of TDF/FTC prescriptions, normalized 
 by package size, by minimizing the residual sum of squares (RSS):   
 ```math
-\min{x} || y(t) – f(t, x) ||_2^2
+\min{x} || y(t) – f(t, x) ||_2^2\\
 \text{where } f(t, x) = Y_{tot}(t) = Y_{ART}(t, k_{ART}, Y_{ART,0}) + Y_{PrEP}(t, k_{PrEP}(t), Y_{PrEP,0})
 ```
 Parameters are determined for the individual federal states, as well as for the entire country.
@@ -149,21 +150,21 @@ This is done in a two-step process.
 
 First, the total number of TDF/FTC prescriptions per month (N_hatTDF/FTC(t)) is sampled from a binomial distribution:
 ```math
-\hat{N}_{TDF/FTC}(t) ~ B(N_{TDF/FTC}, p_{TDF/FTC})
+\hat{N}_{TDF/FTC}(t) \sim B(N_{TDF/FTC},\ p_{TDF/FTC})
 ```
-,where $N_{TDF/FTC}(t) = N_{inNeed} + Y_{ART}(t)$ and $Y_{ART}(t)$ comes from the model fitted against the prescription data.
-$p_{TDF/FTC} = \frac{N_{30}(t) + N_{90}(t)}{N_{TDF/FTC}(t)},the probability of a TDF/FTC prescription at time t, is computed
-from the number of prescribed 30 and 90 pill packages at time t, provided by the dataset.
+,where the number of TDF/FTC prescriptions $N_{TDF/FTC}(t) = N_{inNeed} + Y_{ART}(t)$. $Y_{ART}(t)$ was estimated by the
+model fitted against the prescription data. $p_{TDF/FTC} = \frac{N_{30}(t) + N_{90}(t)}{N_{TDF/FTC}(t)},the probability 
+of a TDF/FTC prescription at time t, is estimated from the number of prescribed 30 and 90 pill packages at time t, provided 
+by the dataset.
 
 In a second step the number of 30- and 90-pill prescriptions are sampled:
 ```math
-\hat{N}_{30}(t) ~ B(N_{TDF/FTC}(t), p_{30}(t))
+\hat{N}_{30}(t) \sim B(N_{TDF/FTC}(t),\ p_{30}(t)) \\
 \hat{N}_{90}(t) = \hat{N}_{TDF/FTC}(t) - \hat{N}_{30}(t)
 ```
 where $p_{30} = \frac{N_{30}(t)}{N_{30}(t) + N_{90}(t)}$ is the probability for a 30-pill prescription at time t.
 
 ### Translating number of prescription to PrEP users
-\section{Translating prescriptions to PrEP users}
 To estimate the actual number of PrEP users from the estimated number of prescriptions, we take intermitted/on-demand use 
 into account. In addition, not everyone is covered by the NHS, and some PrEP users are privately insured or self-payers.
 In a previous study, Schmidt et al. reported 18.9% on-demand users. The average number of prescribed PrEP pills divided
