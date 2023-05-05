@@ -159,8 +159,10 @@ by the dataset.
 
 In a second step the number of 30- and 90-pill prescriptions are sampled:
 ```math
+\begin{align*}
 \hat{N}_{30}(t) \sim B(N_{TDF/FTC}(t),\ p_{30}(t)) \\
 \hat{N}_{90}(t) = \hat{N}_{TDF/FTC}(t) - \hat{N}_{30}(t)
+\end{align*}
 ```
 where $p_{30} = \frac{N_{30}(t)}{N_{30}(t) + N_{90}(t)}$ is the probability for a 30-pill prescription at time t.
 
