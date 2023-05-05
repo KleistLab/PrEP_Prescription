@@ -115,9 +115,11 @@ Truvada was taken daily for treatment or PrEP.
 The model used in this project consists of two equations Y<sub>ART</sub> and Y<sub>PrEP</sub> that model the prescription 
 numbers for HIV therapy and PrEP, respectively.
 ```math 
-\frac{dY_{ART}(t)}{dt} = k_{ART}\cdot Y_{ART}(t)\\
-\frac{dY_{PrEP}(t)}{dt} = k_{PrEP}(t)(N_{inNeed} - (c_{on-demand}\cdot c_{SHI}\cdot Y_{PrEP}(t))\\
-\frac{dY_{tot}(t)}{dt} = Y_{ART}(t) + Y_{PrEP}(t)
+\begin{align*}
+    \frac{dY_{ART}(t)}{dt} &= k_{ART}\cdot Y_{ART}(t)\\
+    \frac{dY_{PrEP}(t)}{dt} &= k_{PrEP}(t)(N_{inNeed} - (c_{on-demand}\cdot c_{SHI}\cdot Y_{PrEP}(t))\\
+    \frac{dY_{tot}(t)}{dt} &= Y_{ART}(t) + Y_{PrEP}(t)\\
+\end{align*}
 ```
 with initial values $Y_{ART}(t_0) = Y_{ART,0}$  and $Y_{PrEP}(t_0) = Y_{PrEP,0}$. For $Y_{ART}$, we assume an exponential decay, 
 reflecting the slow decline of TDF/FTC use in HIV therapy. In the case of PrEP prescriptions, $Y_{PrEP}$, we assume that
@@ -138,8 +140,10 @@ We assumed that PrEP uptake, reflected by parameter k_{PrEP}(t), changes between
 To obtain the model parameters and initial values, the model is fitted to the number of TDF/FTC prescriptions, normalized 
 by package size, by minimizing the residual sum of squares (RSS):   
 ```math
-\min{x} || y(t) – f(t, x) ||_2^2\\
-\text{where } f(t, x) = Y_{tot}(t) = Y_{ART}(t, k_{ART}, Y_{ART,0}) + Y_{PrEP}(t, k_{PrEP}(t), Y_{PrEP,0})
+\begin{align*}
+    &\min{x} || y(t) – f(t, x) ||_2^2\\
+    &\text{where } f(t, x) = Y_{tot}(t) = Y_{ART}(t, k_{ART}, Y_{ART,0}) + Y_{PrEP}(t, k_{PrEP}(t), Y_{PrEP,0})
+\end{align*}
 ```
 Parameters are determined for the individual federal states, as well as for the entire country.
 
@@ -153,15 +157,15 @@ First, the total number of TDF/FTC prescriptions per month (N_hatTDF/FTC(t)) is 
 \hat{N}_{TDF/FTC}(t) \sim B(N_{TDF/FTC},\ p_{TDF/FTC})
 ```
 ,where the number of TDF/FTC prescriptions $N_{TDF/FTC}(t) = N_{inNeed} + Y_{ART}(t)$. $Y_{ART}(t)$ was estimated by the
-model fitted against the prescription data. $p_{TDF/FTC} = \frac{N_{30}(t) + N_{90}(t)}{N_{TDF/FTC}(t)},the probability 
-of a TDF/FTC prescription at time t, is estimated from the number of prescribed 30 and 90 pill packages at time t, provided 
+model fitted against the prescription data. $p_{TDF/FTC} = \frac{N_{30}(t) + N_{90}(t)}{N_{TDF/FTC}(t)}$,the probability 
+of a TDF/FTC prescription at time $t$, is estimated from the number of prescribed 30 and 90 pill packages at time t, provided 
 by the dataset.
 
 In a second step the number of 30- and 90-pill prescriptions are sampled:
 ```math
 \begin{align*}
-\hat{N}_{30}(t) \sim B(N_{TDF/FTC}(t),\ p_{30}(t)) \\
-\hat{N}_{90}(t) = \hat{N}_{TDF/FTC}(t) - \hat{N}_{30}(t)
+&\hat{N}_{30}(t) \sim B(N_{TDF/FTC}(t),\ p_{30}(t)) \\
+&\hat{N}_{90}(t) = \hat{N}_{TDF/FTC}(t) - \hat{N}_{30}(t)
 \end{align*}
 ```
 where $p_{30} = \frac{N_{30}(t)}{N_{30}(t) + N_{90}(t)}$ is the probability for a 30-pill prescription at time t.
