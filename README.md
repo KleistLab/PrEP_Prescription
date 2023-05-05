@@ -49,6 +49,14 @@ intermediate results are stored in the data folder, each script can be run indiv
 steps: (i) preliminary steps, such as initial data transformation and model fitting, (ii) data sampling, (iii) model 
 fitting to the sampled data, and (iv) final evaluation of the results, including plotting and calculation of some statistics.
 
+***Important Note:***\
+*Since a large portion of prescribed TDF/FTC are 90-pill packages, each datapoint in the continuous dataset depends on the
+previous 90 days. As a consequence, the first 90 timepoints in a continuous dataset lack information and should be removed
+when fitting a model against it.\
+Data used in this project covers a period from January 2017 until December 2021. However, because of what we have described above,
+the final models and their parameters assume a start date of April 1st 2017., i.e. $t_0 = Jan.\ 1st\ 2017$.*
+
+
 ### Preliminary Steps
 Script:
 ```/factories/01_preliminary_data_creation.py```
@@ -90,7 +98,7 @@ The model parameters will be stored under `/results/model_parameters_sampled.tsv
 analysis, copy the file into the data folder. Alternatively, `save_in_data_folder = True` can be set before running the 
 code. This will save the generated file automatically into the data folder, but also overwrites the previous file.
 
-*** TOADD: REMOVE THE FIRST 90 DAYS FROM DATASETS WHEN FITTING MODEL AGAINST IT ***
+
 ### Evaluation of Results
 Script: `/factories/04_evaluation.py`
 
@@ -101,7 +109,6 @@ Finally, the generated models are then evaluated. This script creates several fi
 * Computes absolute and relative prescription numbers at different times
 
 All figures are stored under `/results/figures/` and all model predictions are stored in `/results/milestones.tsv`
-
 
 ## 3 Methods
 
