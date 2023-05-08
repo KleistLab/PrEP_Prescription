@@ -110,6 +110,7 @@ Finally, the generated models are then evaluated. This script creates several fi
 
 All figures are stored under `/results/figures/` and all model predictions are stored in `/results/milestones.tsv`
 
+***Note: All model simulations start on April 1st 2017!***
 ## 3 Methods
 
 ### Generation of continuous trajectories from monthly prescription data
