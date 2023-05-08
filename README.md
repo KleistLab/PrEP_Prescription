@@ -111,6 +111,9 @@ Finally, the generated models are then evaluated. This script creates several fi
 All figures are stored under `/results/figures/` and all model predictions are stored in `/results/milestones.tsv`
 
 ***Note: All model simulations start on April 1st 2017!***
+
+***Note2: The script `/examples/model_simulation.py` contains a few functions that create all objects needed for plotting. 
+Can be used to set up your own plotting script.***
 ## 3 Methods
 
 ### Generation of continuous trajectories from monthly prescription data
